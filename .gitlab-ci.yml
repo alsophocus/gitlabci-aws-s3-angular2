@@ -1,0 +1,45 @@
+variables:
+  S3_BUCKET_NAME: "myBucketName"
+  AWS_DEFAULT_REGION: "eu-west-1" # make sure this is YOUR region
+  AWS_ACCESS_KEY_ID: "BIG_KEY"
+  AWS_SECRET_ACCESS_KEY: "BIG_SECRET" # you can use gitlab variables if you want to hide these
+
+stages:
+  - install
+  - build
+  - deploy
+
+# install all you need
+install:
+  stage: install
+  image: node:7.10.1
+  script:
+    - apt-get --quiet update --yes
+    - apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1
+    - apt-get --quiet install -y build-essential
+    - curl -sL http://deb.nodesource.com/setup_7.x | bash -
+    - apt-get --quiet install -y nodejs
+    - apt-get --quiet update --yes
+    - npm -v
+    - npm install -g @angular/cli
+
+# build production
+build:
+  stage: build
+  image: node:7.10.1
+  script:
+    - npm install -g @angular/cli
+    - npm install
+    - npm run build:prod
+  artifacts:
+    paths:
+    - dist/
+# deploy to s3
+deploy:
+  stage: deploy
+  image: python:latest
+  script:
+  - pip install awscli
+  - aws s3 sync ./dist s3://$S3_BUCKET_NAME/ --delete
+  only:
+  - master
