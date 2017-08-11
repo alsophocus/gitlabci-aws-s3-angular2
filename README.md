@@ -1,0 +1,1 @@
+# gitlabci-aws-s3-angular2
